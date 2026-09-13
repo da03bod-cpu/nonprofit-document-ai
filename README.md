@@ -1,16 +1,43 @@
-# Nonprofit Document AI
+# Nonprofit Document AI — PaddleOCR-VL 1.6 + Qwen3
 
-Initial RunPod Serverless worker for PaddleOCR-VL 1.6.
+Single RunPod Serverless endpoint.
 
-Flow:
-PDF URL -> RunPod Worker -> PaddleOCR-VL 1.6 -> OCR JSON
+## Routing
 
-Qwen3 will be added after OCR validation.
+- PDF → PaddleOCR-VL 1.6 → Qwen3
+- DOCX → python-docx → Qwen3
+- JSON → JSON parser → Qwen3
 
-## Input
+## RunPod input
+
 ```json
-{"input":{"file_url":"https://example.com/report.pdf"}}
+{
+  "input": {
+    "file_url": "https://example.com/report.pdf",
+    "file_type": "pdf"
+  }
+}
 ```
 
-Recommended first GPU: NVIDIA L4 24GB.
-Fallback: A10G 24GB.
+`file_type` can be `pdf`, `docx`, or `json`.
+
+## Qwen model
+
+Default:
+
+`Qwen/Qwen3-8B`
+
+Environment variables:
+
+- `QWEN_MODEL`
+- `QWEN_LOAD_IN_4BIT=true`
+- `QWEN_MAX_NEW_TOKENS=4096`
+- `QWEN_MAX_INPUT_CHARS=100000`
+
+For a fine-tuned Qwen3 model, set `QWEN_MODEL` to the Hugging Face model/repository path available to the worker.
+
+## Important
+
+The endpoint now returns the final structured JSON from Qwen3. n8n does not need a separate Clean OCR node.
+
+The current implementation truncates extremely large text at `QWEN_MAX_INPUT_CHARS`. For very large annual reports, the next production improvement should be page-aware chunking + Qwen merge rather than raw truncation.

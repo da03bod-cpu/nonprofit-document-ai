@@ -1,2 +1,6 @@
 runpod
 requests
+python-docx
+transformers
+accelerate
+bitsandbytes
